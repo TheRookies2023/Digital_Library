@@ -4,6 +4,7 @@ const Subject = require('./models/SubjectModel')
 // const Student = require('./models/StudentModel')
 const Semester = require('./models/SemesterModel')
 const Chapter = require('./models/ChapterModel')
+const nodemailer = require('nodemailer');
 const Signup = require('./models/SignupModel')
 const bcrypt = require('bcrypt')
 
@@ -19,7 +20,7 @@ app.get('/',(req,res)=>{
     res.send('Hello Node API')
 })
 
-// Signup route with password hashing
+// Signup route with password hashingg
 app.post('/signup', async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(req.body.Password, 10); 
@@ -193,6 +194,77 @@ app.get('/chapters/:chapterId/content', async (req, res) => {
 //     return res.status(500).json({ error: 'Internal server error' });
 //   }
 // });
+
+//password recovery
+app.post('/forgot-password', async (req, res) => {
+  const { Email } = req.body;
+  try {
+    const user = await Signup.findOne({ Email: Email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const temporaryPassword = Math.random().toString(36).slice(-8);
+
+    const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+
+    user.Password = hashedPassword;
+    await user.save();
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'your-email@gmail.com',
+        Password: 'your-email-password',
+      },
+    });
+
+    const mailOptions = {
+      from: 'your-email@gmail.com',
+      to: Email,
+      subject: 'Temporary Password for Password Reset',
+      text: `Your temporary password is: ${temporaryPassword}. Please use this password to log in and reset your password.`,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+        return res.status(500).json({ message: 'Error sending email' });
+      }
+      console.log('Email sent: ' + info.response);
+      return res.status(200).json({ message: 'Temporary password sent to your email' });
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+app.post('/reset-password', async (req, res) => {
+  const { Email, NewPassword, ConfirmPassword } = req.body;
+  try {
+    const user = await Signup.findOne({ Email: Email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (NewPassword !== ConfirmPassword) {
+      return res.status(400).json({ message: 'Passwords do not match' });
+    }
+
+    const hashedPassword = await bcrypt.hash(NewPassword, 10);
+
+    user.Password = hashedPassword;
+    await user.save();
+
+    return res.status(200).json({ message: 'Password reset successfully' });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 
 mongoose.set("strictQuery",false)
 mongoose.connect('mongodb+srv://sahanasakri123:Sahana123@studentapi.zioio2c.mongodb.net/Nodejs-API?retryWrites=true&w=majority&appName=StudentAPI').then(() =>{
