@@ -23,6 +23,14 @@ const SignupSchema = mongoose.Schema(
     Password: {
       type: String,
       required: true
+    },
+    NewPassword: {
+      type: String,
+      default:null
+    },
+    ConfirmPassword: {
+      type: String,
+      default:null
     }
   },
   {
