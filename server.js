@@ -195,7 +195,7 @@ app.get('/chapters/:chapterId/content', async (req, res) => {
 // });
 
 mongoose.set("strictQuery",false)
-mongoose.connect('mongodb+srv://sahanasakri123:Sahana123@studentapi.zioio2c.mongodb.net/Nodejs-API?retryWrites=true&w=majority&appName=StudentAPI').then(() =>{
+mongoose.connect('mongodb+srv://vaishnavisulakhe11:vaishu@studentapi.tqqzmlq.mongodb.net/?retryWrites=true&w=majority&appName=studentAPI').then(() =>{
     app.listen(3000, ()=>{
         console.log('Node API app is running on port 3000')
     })
